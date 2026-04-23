@@ -1,1 +1,34 @@
 .aider*
+# Ignore .ipynb_checkpoints
+.ipynb_checkpoints/
+
+# Ignore .gitignore
+!.gitignore
+
+# Ignore README.txt
+!README.txt
+
+# Ignore Project_Skeleton.ipynb
+!Project_Skeleton.ipynb
+
+# Ignore documentation directory
+!documentation/
+
+# Ignore operating system files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore python bytecode
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore python cache
+__pycache__/
+
+# Ignore jupyter notebook cache
+.ipynb_checkpoints
