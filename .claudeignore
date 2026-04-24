@@ -1,3 +1,3 @@
-# files to ignore for claude context
-/documentation
+# files to ignore for claude context #
+/documentation # we only include CONTEXT.md and README.md
 /database
