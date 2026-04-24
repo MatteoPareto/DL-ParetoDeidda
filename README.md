@@ -7,6 +7,8 @@ This is a university project for Image Retrieval using CelebA dataset. The proje
 The project consists of the following directories and files:
 - documentation/: contains project documentation, including papers and project introduction
 - Project_Skeleton.ipynb: the main project notebook, which includes dataset setup, data loading, metrics, and evaluation
+- CLAUDE.md: specific instruction to how claude code should act
+- CONTEXT.md: the general context of the project, extracted from the documentation (again useful for claude - linked in the CLAUDE.md)
 
 ## Getting Started
 To get started with the project, follow these steps:
