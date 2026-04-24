@@ -9,6 +9,7 @@ The project consists of the following directories and files:
 - Project_Skeleton.ipynb: the main project notebook, which includes dataset setup, data loading, metrics, and evaluation
 - CLAUDE.md: specific instruction to how claude code should act
 - CONTEXT.md: the general context of the project, extracted from the documentation (again useful for claude - linked in the CLAUDE.md)
+- .claudeignore: here goes the files that we want claude code to ignore and not include in the context (to use less tokens)
 
 ## Getting Started
 To get started with the project, follow these steps:
