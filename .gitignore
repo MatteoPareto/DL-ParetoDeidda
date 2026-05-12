@@ -2,6 +2,9 @@
 # Ignore .ipynb_checkpoints
 .ipynb_checkpoints/
 
+# ignore the data
+/datasets
+
 # Ignore .gitignore
 !.gitignore
 
