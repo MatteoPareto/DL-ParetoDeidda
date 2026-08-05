@@ -21,6 +21,9 @@ MATTEO_CONTEXT.md
 # Ignore large dataset files
 database/celeba.zip
 
+# Ignore large .pt files (embeddings, model weights — regenerable from notebook)
+*.pt
+
 # Ignore operating system files
 .DS_Store
 Thumbs.db
