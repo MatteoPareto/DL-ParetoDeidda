@@ -58,3 +58,18 @@ idx2attribute = {idx: name for idx, name in enumerate(celeba.attr_names)}
 attribute2idx = {name: idx for idx, name in enumerate(celeba.attr_names)}
 ```
 
+## Current state (2026-08-11)
+
+**Read `HANDOFF.md` first** — it records what was run, the measured results, the
+traps (cache invalidation, single-seed conclusions), and what is still open.
+
+Key facts that override older guidance in this file:
+- Development now happens on the DISI lab VM, not Colab: `~/DL-ParetoDeidda`,
+  venv at `.venv` (Python 3.12, torch cu126, transformers 5.14.1).
+- The deliverable is `Project.ipynb` (47 cells) — committed **with outputs**.
+  `Project_Skeleton.ipynb` is the course starter, kept for reference only.
+- `transformers` 5.x changed the CLIP feature API; see `clip_features()` in §3
+  and do not re-apply the projection.
+- Hyperparameters are selected on the synthetic validation metric, never on the
+  test benchmark. Keep that invariant.
+- Colab verification has **not** been done and is the main outstanding risk.

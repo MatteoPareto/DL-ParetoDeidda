@@ -50,3 +50,6 @@ _exp*.ipynb
 _final_out.ipynb
 *.log
 Project.ipynb.bak
+_lr*.ipynb
+_pass*.ipynb
+_lrcheck.ipynb

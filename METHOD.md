@@ -1,5 +1,29 @@
 # Level 3 — Gated Cross-Attention Fusion
 
+> **STATUS (updated after the experiments in `Project.ipynb` §10).**
+> This document is the *design rationale as originally written*, before any of it
+> had been run. The notebook has since tested every claim below, and **three of
+> them did not survive**. Read this alongside §8.3 and §10.2 of the notebook.
+>
+> | claim in this document | what the experiments found |
+> |---|---|
+> | Learned sign embeddings fix negation (F3) | **Not supported.** Removing them *improves* R@10 by +0.023 (0.324 vs 0.301). At `lr=1e-4` they look catastrophic (0.221 vs 0.308); the gap closes by `lr=1e-3`. They are not harmful, they are harder to optimise — and redundant. |
+> | Image-conditioned cross-attention gives dynamic weighting (F1) | **Not supported.** Replacing it with a uniform mean over condition tokens is slightly better (0.311 vs 0.301) with 25% fewer parameters. |
+> | Self-attention lets conditions negotiate (F2) | **Neutral.** −0.004, inside noise, while halving parameters. |
+> | The gate adapts the step size (F4) | **Supported — the one mechanism that earns its place.** Removing it costs −0.043 and triples seed variance (sd 0.049). |
+> | The residual structurally preserves identity | **Overstated.** Composed queries drift up to `1−cos = 0.93` from the reference (nearly orthogonal), and retrieval collapses to ~27% distinct images vs ~75% for the training-free levels. |
+>
+> Not mentioned anywhere below, and larger than every effect above combined:
+> **the learning rate was undertuned.** `1e-4 → 3e-4` is worth ~+0.08 R@10.
+>
+> Best configuration measured: **`− sign embeddings − cross-attention`,
+> R@10 = 0.338 ± 0.017, 3.02M params.** The deployed model currently uses
+> `− sign embeddings` at `lr=3e-4` (0.324 ± 0.014).
+>
+> The reasoning below is kept unchanged as a record of the design process; it is
+> well-argued and mostly wrong, which is the point of §10 existing.
+
+
 **Design notes, implementation choices, and sources of inspiration**
 
 Companion document to `Project.ipynb` (§7). The notebook contains the runnable code and
