@@ -42,3 +42,11 @@ __pycache__/
 
 # Ignore jupyter notebook cache
 .ipynb_checkpoints
+
+# nbconvert scratch from experiment runs
+_run_*.ipynb
+_diag*.ipynb
+_exp*.ipynb
+_final_out.ipynb
+*.log
+Project.ipynb.bak
