@@ -1,28 +1,32 @@
 # Level 3 — Gated Cross-Attention Fusion
 
-> **STATUS (updated after the experiments in `Project.ipynb` §10).**
-> This document is the *design rationale as originally written*, before any of it
-> had been run. The notebook has since tested every claim below, and **three of
-> them did not survive**. Read this alongside §8.3 and §10.2 of the notebook.
+> **STATUS — superseded in part. Read `Project.ipynb` §8 and §10 first.**
 >
-> | claim in this document | what the experiments found |
+> This document is the *design rationale as originally written*, before any of it
+> had been run. The notebook has since tested every claim, and the deployed model
+> no longer matches the architecture described below.
+>
+> **Deployed model:** self-attention + gate + mean-pooled condition tokens, sign
+> encoded by negating the text embedding. 3.02M params.
+> **R@10 = 0.338** (0.336 ± 0.016 over 5 seeds) vs 0.110 for the L1 baseline.
+>
+> | claim below | what the experiments found |
 > |---|---|
-> | Learned sign embeddings fix negation (F3) | **Not supported.** Removing them *improves* R@10 by +0.023 (0.324 vs 0.301). At `lr=1e-4` they look catastrophic (0.221 vs 0.308); the gap closes by `lr=1e-3`. They are not harmful, they are harder to optimise — and redundant. |
-> | Image-conditioned cross-attention gives dynamic weighting (F1) | **Not supported.** Replacing it with a uniform mean over condition tokens is slightly better (0.311 vs 0.301) with 25% fewer parameters. |
-> | Self-attention lets conditions negotiate (F2) | **Neutral.** −0.004, inside noise, while halving parameters. |
-> | The gate adapts the step size (F4) | **Supported — the one mechanism that earns its place.** Removing it costs −0.043 and triples seed variance (sd 0.049). |
-> | The residual structurally preserves identity | **Overstated.** Composed queries drift up to `1−cos = 0.93` from the reference (nearly orthogonal), and retrieval collapses to ~27% distinct images vs ~75% for the training-free levels. |
+> | Learned sign embeddings fix negation (F3) | **Dropped — redundant.** They looked catastrophic at `lr=1e-4`, but that was an optimisation artefact: the gap closes by `lr=1e-3`. Removing them is simpler and no worse. |
+> | Image-conditioned cross-attention gives dynamic weighting (F1) | **Dropped.** Mean-pooling the condition tokens scores better (0.338 vs 0.311) with 25% fewer parameters, and holds 0.337 at `lr=2e-3` where cross-attention collapses to 0.105. |
+> | Self-attention lets conditions negotiate (F2) | **Kept, but neutral** (−0.004, inside noise). |
+> | The gate adapts the step size (F4) | **Supported — the one mechanism that earns its place.** Removing it costs −0.043 and triples seed variance. |
+> | The residual structurally preserves identity | **Overstated.** Queries drift nearly orthogonal to the reference and retrieval concentrates on ~26% distinct images vs ~75% for the training-free levels. §10.5 shows forbidding this costs recall — the collapse is largely rational for a Hamming-based ground truth. |
 >
 > Not mentioned anywhere below, and larger than every effect above combined:
 > **the learning rate was undertuned.** `1e-4 → 3e-4` is worth ~+0.08 R@10.
 >
-> Best configuration measured: **`− sign embeddings − cross-attention`,
-> R@10 = 0.338 ± 0.017, 3.02M params.** The deployed model currently uses
-> `− sign embeddings` at `lr=3e-4` (0.324 ± 0.014).
+> **Cost of the simplification:** with cross-attention gone, per-condition weights
+> are uniform by construction, so the attention-weight interpretability analysis
+> is degenerate for the deployed model (§8.3).
 >
-> The reasoning below is kept unchanged as a record of the design process; it is
-> well-argued and mostly wrong, which is the point of §10 existing.
-
+> The reasoning below is kept unchanged as a record of the design process. It is
+> well-argued and largely unsupported by the experiments, which is why §10 exists.
 
 **Design notes, implementation choices, and sources of inspiration**
 

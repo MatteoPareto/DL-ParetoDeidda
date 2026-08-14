@@ -53,3 +53,14 @@ Project.ipynb.bak
 _lr*.ipynb
 _pass*.ipynb
 _lrcheck.ipynb
+
+# Study result caches are tiny (dataframes, a few KB) and ARE tracked, so a cold
+# Colab run shows every table in Section 10 without retraining ~65 models.
+!database/ablations.pt
+!database/robustness.pt
+!database/lr_sweep.pt
+!database/anchor_sweep.pt
+!database/joint_sweep.pt
+
+# nbconvert scratch (all scratch notebooks start with an underscore)
+_*.ipynb
