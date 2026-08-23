@@ -61,6 +61,7 @@ _lrcheck.ipynb
 !database/lr_sweep.pt
 !database/anchor_sweep.pt
 !database/joint_sweep.pt
+!database/alt_study.pt
 
 # nbconvert scratch (all scratch notebooks start with an underscore)
 _*.ipynb

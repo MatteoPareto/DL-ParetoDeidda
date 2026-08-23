@@ -25,8 +25,23 @@
 > are uniform by construction, so the attention-weight interpretability analysis
 > is degenerate for the deployed model (§8.3).
 >
+> **Superseded again by §11 (2026-08-23), at a deeper level.** Everything in this
+> document — and in Levels 1-3 — assumes the answer is a single composed query
+> vector compared by cosine similarity. The assignment does not require that; it
+> asks for a *dynamic similarity metric*. Section 11 shows the benchmark's ground
+> truth is reproduced **exactly** by an attribute rule, and that scoring that rule
+> directly in predicted-attribute space reaches **R@10 = 0.558** with 1.13M
+> parameters, against 0.338 here. Adding this module's composed query on top of it
+> is worth +0.007. §11.7 also gives this module the repair its own failure
+> diagnosis implies (intra-modal condition tokens plus an explicit
+> `<log_mu(v_ref), d_a>` satisfaction feature) and validation does not select it.
+>
+> What this module still has that §11's method does not: it accepts **arbitrary
+> text conditions**, where the attribute method answers exactly CelebA's 40.
+>
 > The reasoning below is kept unchanged as a record of the design process. It is
-> well-argued and largely unsupported by the experiments, which is why §10 exists.
+> well-argued and largely unsupported by the experiments, which is why §10 and §11
+> exist.
 
 **Design notes, implementation choices, and sources of inspiration**
 

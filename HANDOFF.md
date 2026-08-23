@@ -6,7 +6,9 @@ For whoever (human or AI assistant) picks this up next. Read before touching
 ## TL;DR
 
 The notebook runs clean end-to-end and the report is written from measured
-numbers. Remaining work: **Colab verification** (not done — the main risk).
+numbers. Section 11 (added 2026-08-23) questions the formulation the first ten
+sections assume and changes the headline. Remaining work: **Colab verification**
+(still not done — the main risk).
 
 | | R@10 |
 |---|---|
@@ -14,72 +16,110 @@ numbers. Remaining work: **Colab verification** (not done — the main risk).
 | C2 image-only control (no text) | 0.076 |
 | L1 zero-shot arithmetic (mandatory baseline) | 0.110 |
 | L2 visual directions | 0.117 |
-| **L3 deployed (slim)** | **0.338** (0.336 ± 0.016 over 5 seeds) |
+| L3 deployed fusion (slim) | 0.338 (0.336 ± 0.016 over 5 seeds) |
+| **A predicted-attribute scoring (§11)** | **0.558** (0.557 ± 0.002 over 5 seeds) |
+| A with a plain 20.5k-param linear probe instead | 0.544 |
+| attribute oracle — LEAKAGE, not a method | 1.000 |
 
-**3.1× the baseline**, 3.02M trainable params on frozen CLIP. Custom queries:
-0.254 vs L1 0.038 / L2 0.068, significant on 3 of 4.
+## The two results, and why both are reported
 
-## Deployed model
+**L3** is the composed-query method the assignment sketches: 3.02M trainable
+params on frozen CLIP, 3.1× the mandatory baseline, open-vocabulary (any text
+condition CLIP can encode).
 
-Self-attention over condition tokens + **mean pooling** (no cross-attention) +
-sigmoid gate + residual, sign encoded by negating the text embedding (no learned
-sign embeddings). `lr = 3e-4`. This is *not* the architecture `METHOD.md`
-describes — see its status banner.
+**A** (§11.3) drops the single-vector assumption. A probe maps each frozen CLIP
+embedding to 40 attribute probabilities offline, and candidates are scored with
+the benchmark's ground-truth rule kept as two separate clauses:
+`log P(satisfies C) + w_i · E[agreement off C]`. 1.13M params, +65% relative over
+L3, significant on 11/13 queries, 0.398 vs 0.275 on the custom queries.
 
-Why: ablations (§10.2) and the joint LR × architecture sweep (§10.6) show the
-slim variant is better (0.338 vs 0.301 designed), 25% smaller, and stable across
-a 6.7× LR range where the cross-attention model diverges.
+**Capacity is not what makes it work.** Swap the MLP probe for plain logistic
+regression — 20,520 parameters, no attention, no mining, no contrastive loss —
+and it still scores **0.544**. That number, not 0.558, is the one that says
+something about the benchmark.
 
-## Hard-won lessons — do not relearn these
+**A is not strictly better — it is narrower.** It answers exactly 40 fixed
+attributes; L1–L3 answer arbitrary text. Report both, and report the trade-off.
+Do not quietly replace L3 with A in the narrative.
 
-- **Never conclude from one seed or one learning rate.** Four conclusions here
+## What §11 established (do not relearn)
+
+- **The benchmark is attribute matching.** `satisfies constraints AND Hamming ≤ 2
+  on the rest` reproduces `celeba_evaluation.json` **exactly**, for every source
+  of every query. The oracle over true test attributes scores R@10 = 1.000 —
+  labelled as leakage in the notebook, and it must stay labelled.
+- **The diagnostics predicted the result before any training.** Corrupting oracle
+  bits at 10% gives R@10 = 0.61; the probe's held-out error is 9.6% and A scores
+  0.558. Two cells, no training, ~1 minute. Run diagnostics like this first.
+- **The CLIP-space branch is redundant given predicted attributes.** Adding the
+  trained L3 query to A at the validation-selected weight is worth **+0.007**.
+- **The collapse is a property of the metric.** A collapses onto as few distinct
+  images as L3 does, sharing no architecture, loss, or space with it. §8.4's
+  claim now has independent support.
+- **Three of the four alternatives failed, and the failures are reported.**
+  F (retrieve-then-rerank) is a truncation of A and improves monotonically as it
+  stops truncating. H (training-free conditional-similarity mask) is selected
+  away — validation picks λ = 0. E (repair L3 with intra-modal visual tokens plus
+  an explicit `<log_mu(v_ref), d_a>` satisfaction feature) does not beat the
+  design it was meant to repair.
+
+## Hard-won lessons — do not relearn these either
+
+- **Never conclude from one seed or one learning rate.** Five conclusions here
   were overturned by adding a controlled dimension:
   - "unbiased mining generalises better" — n=1 seed. False at n=5.
   - "sign embeddings are harmful" — n=1 LR. An optimisation artefact.
-  - "L3 fails on custom queries" — undertuning. Went 0.055 → 0.254 after LR fix.
-  - "unbiased mining is unstable/bimodal" — also undertuning; stable once tuned.
+  - "L3 fails on custom queries" — undertuning. 0.055 → 0.254 after the LR fix.
+  - "unbiased mining is unstable/bimodal" — also undertuning.
+  - "the composed query is the object to optimise" — never tested until §11.
 - **The learning rate mattered more than the entire architecture** (~+0.08 R@10).
   If you change the model, re-sweep the LR; they interact strongly.
-- **Hyperparameters are selected on the synthetic validation metric only.** The
-  test benchmark must never choose anything. Note §10.5: `lambda=0.1` scores
-  better on *both* test benchmarks than the deployed `lambda=0`, and we still did
-  not adopt it, because validation did not select it. Keep that discipline.
-- **Cache keys.** `TRAIN_HPARAMS` keys the ablation/robustness/LR/anchor/joint
-  caches. Changing `LR` or `FUSION_CFG` invalidates all of them and triggers ~65
-  retrainings (~70 min). Expect it; it is not a hang.
-- **Ablating cross-attention makes attention weights uniform.** Anything calling
-  `forward(..., return_attn=True)` gets uniform weights by construction. This
-  already crashed one run before `forward()` was fixed to return them explicitly.
-- **Commit the notebook WITH outputs.** An early full run was lost because it was
-  saved stripped. `nbstripout` is active on Matteo's WSL machine but not the VM.
+- **Hyperparameters are selected on validation only.** §11 keeps this: its
+  validation world is a 32,770-image held-out slice of TRAIN, with the probe
+  fitted on the other 130,000 and synthetic queries mined there under the
+  official rule. The benchmark chooses nothing, in §11 as in §10.
+- **Watch the sign convention.** `sign_ids` are `0 = "+" / 1 = "-"` (the collate
+  convention), while mined `signs` are `±1`. Feeding one where the other is
+  expected silently produces a plausible-looking, badly wrong benchmark number.
+  This cost one full §11.7 run.
+- **Cache keys.** `TRAIN_HPARAMS` keys the §10 caches. Changing `LR` or
+  `FUSION_CFG` invalidates all of them and triggers ~65 retrainings (~70 min).
+- **Ablating cross-attention makes attention weights uniform** by construction.
+- **Commit the notebook WITH outputs.** `nbstripout` is active on Matteo's WSL
+  machine but not the VM.
 
 ## Honest caveats in the results
 
-- **L3 collapses**: ~26% distinct images in the top-10 vs ~75% for L1/L2. §10.5
-  probes this with an identity anchor — diversity rises monotonically with the
-  anchor weight, but recall degrades beyond a mild setting. The collapse is
-  largely the recall-maximising response to a Hamming-based ground truth, not a
-  fixable bug. §8.4 says this; keep it.
-- **Only 1 of 4 designed mechanisms is justified** (the gate).
-- **`+Male, +Wearing_Lipstick` scores 0.000 for every method**, L3 included.
-- Ablations use 3 seeds; anchor 2. Enough for the large effects, not small ones.
+- **Both L3 and A collapse**: ~26% distinct images in the top-10 vs ~75% for
+  L1/L2. §10.5 probes it with an identity anchor; §11.8 explains why it is the
+  metric, not the model.
+- **Only 1 of 4 designed L3 mechanisms is justified** (the gate).
+- **`+Male, +Wearing_Lipstick`** is 0.000 for every composed-query method; A
+  scores 0.040 — the only non-zero result on it.
+- Ablations use 3 seeds; anchor 2; the two seed studies 5.
+- A's ceiling is attribute-prediction accuracy (90.4% held-out mean), not CLIP.
 
 ## Study caches are committed
 
-`database/{ablations,robustness,lr_sweep,anchor_sweep,joint_sweep}.pt` are a few
-KB each (dataframes, not weights) and are **tracked in git** so a cold Colab run
-displays every study table instantly instead of retraining ~65 models. Delete one
-to force its section to recompute. The large `.pt` files (embeddings, mined
-examples, checkpoint) remain gitignored and regenerate on first run.
+`database/{ablations,robustness,lr_sweep,anchor_sweep,joint_sweep,alt_study}.pt`
+are a few KB each (dataframes, not weights) and are **tracked in git** so a cold
+Colab run displays every study table instantly instead of retraining ~70 models.
+`alt_study.pt` holds §11's seed study and the five Level-3 repair variants; delete
+it to force §11 to recompute (~20 min). The large `.pt` files (embeddings, mined
+examples, checkpoints) remain gitignored and regenerate on first run.
+
+§11 deliberately does *not* cache the probe or A's benchmark evaluation: the
+headline number is recomputed live on every run (~6 min).
 
 ## Still to do
 
 1. **Colab verification — not done, and the main risk.** Everything ran on the
    lab VM with `transformers 5.14.1` and warm caches. Put `celeba.zip` and
    `celeba_evaluation.json` in `MyDrive/datasets/`, open the notebook, Run all,
-   confirm zero errors. Budget ~45-50 min cold (embeddings dominate; the study
-   tables load from the committed caches).
-2. Explore the mild identity anchor (`lambda ~ 0.1`) properly — more seeds, finer
-   grid, and ideally a validation metric that rewards diversity so the selection
-   rule can see what the test metric already does.
-3. `RUNNING.md` timings are approximate; re-check after a real Colab run.
+   confirm zero errors. Budget ~60 min cold (embeddings dominate).
+2. A **learned** conditional-similarity mask. §11.4 rules out the training-free
+   one; that is not evidence about a learned one, and it is the most literal
+   reading of the assignment's "dynamic similarity metric".
+3. Distil the probe's signal back into a composed query, so a single vector
+   inherits what A knows while staying open-vocabulary.
+4. `RUNNING.md` timings are approximate; re-check after a real Colab run.

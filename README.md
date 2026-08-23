@@ -5,13 +5,23 @@ attribute constraints (e.g. `+Eyeglasses, -Smiling`), retrieve the images from t
 CelebA test split that keep the identity of the reference while satisfying every
 constraint. Three methods of increasing sophistication are implemented and compared:
 zero-shot latent arithmetic (baseline), visual attribute directions (training-free),
-and a gated cross-attention fusion module trained with InfoNCE (main contribution).
+and a gated fusion module trained with InfoNCE (R@10 = 0.338, 3.1x the baseline).
+
+A final section then questions the assumption all three share — that the answer is a
+single composed query vector compared by cosine similarity, which the assignment never
+requires. Two training-free diagnostics show the benchmark's ground truth is reproduced
+*exactly* by an attribute rule, and a method that scores that rule directly in
+predicted-attribute space reaches R@10 = 0.558 with a third of the parameters, at the
+cost of answering only CelebA's 40 fixed attributes instead of arbitrary text. Both
+results, and the trade-off between them, are reported.
 
 ## Project structure
 
 - `Project.ipynb` — **the main deliverable**: code + report (three methods, official
   benchmark, statistical analysis with bootstrap CIs, custom queries, qualitative
-  success/failure cases)
+  success/failure cases, controls and ablations, and alternative formulations)
+- `HANDOFF.md` — measured results, hard-won lessons, and what is still open; read
+  this before changing anything
 - `Project_Skeleton.ipynb` — course-provided starter notebook (kept for reference)
 - `METHOD.md` — Level-3 design notes: every implementation choice explained and
   mapped to its source of inspiration

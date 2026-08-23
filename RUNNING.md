@@ -1,12 +1,13 @@
 # Running the project — Google Colab and Azure VM
 
-> **Updated 2026-08-11.** The timings below predate Section 10 (controls,
-> ablations, seed study, LR sweep), which trains ~40 extra models. A cold run
-> is now roughly **70-90 min**, not 60. With the `.pt` caches present
-> (`ablations.pt`, `robustness.pt`, `lr_sweep.pt`, plus embeddings and the
-> checkpoint) a re-run is ~5 min. Changing `LR` or `FUSION_CFG` invalidates the
-> experiment caches and forces ~50 retrainings — expect ~50 min, it is not a hang.
-> See `HANDOFF.md`.
+> **Updated 2026-08-23.** Section 11 (alternative formulations) adds ~10 minutes
+> to a warm run: it fits three attribute probes live (two on the validation
+> world, one on the full train split) because its headline number should not come
+> from a cache. Its two expensive studies — the 5-seed probe study and the five
+> Level-3 repair variants — load from `database/alt_study.pt`, which is tracked in
+> git. A cold run is roughly **80-100 min**; with all `.pt` caches present a
+> re-run is ~15 min. Changing `LR` or `FUSION_CFG` invalidates the §10 caches and
+> forces ~50 retrainings — expect ~50 min, it is not a hang. See `HANDOFF.md`.
 
 `Project.ipynb` runs unmodified in two environments. It detects Colab automatically and
 adjusts its paths; everything else (extraction, caching, training, evaluation) is the
