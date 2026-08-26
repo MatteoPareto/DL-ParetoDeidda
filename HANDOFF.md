@@ -111,6 +111,54 @@ examples, checkpoints) remain gitignored and regenerate on first run.
 §11 deliberately does *not* cache the probe or A's benchmark evaluation: the
 headline number is recomputed live on every run (~6 min).
 
+## The composed-query ceiling (added 2026-08-26)
+
+Five independent attempts to raise the single-composed-vector number on frozen
+ViT-B/32 all land in the same band:
+
+| attempt | section | benchmark R@10 |
+|---|---|---|
+| component ablations | 10.2 | 0.258 - 0.338 |
+| learning-rate sweep | 10.4 | plateau ~0.32 - 0.34 |
+| identity anchor | 10.5 | 0.337 best under validation |
+| Level-3 repair (visual tokens + satisfaction) | 11.7 | 0.285 - 0.326 |
+| **auxiliary attribute loss** | **11.9** | **0.340 (vs 0.338 control)** |
+
+Section 11.8 says the same thing from the other side: adding the whole trained
+fusion module on top of attribute scoring is worth +0.007. **~0.34 is a ceiling
+for this formulation and this backbone, not a tuning gap.** Do not spend more
+time tuning composed-query methods expecting a materially different number.
+
+### What 11.9 actually found
+
+Auxiliary attribute supervision (predict the target's 40-bit profile from the
+composed query, head discarded at inference) does NOT lift the benchmark:
+0.340 +/- 0.013 at the validation-selected beta = 5, against 0.338 +/- 0.008 for
+the beta = 0 control.
+
+It DOES improve generalisation: custom-query R@10 goes 0.261 -> 0.304, winning on
+**5 seeds out of 5**. So the attribute signal helps a composed query travel to
+query families it was never mined for, but cannot move the benchmark the way
+scoring attributes directly (approach A) does.
+
+A cautionary detail: at 3 seeds, beta = 3 looked like a real win (0.353). At 5
+seeds it fell to 0.345 +/- 0.011 with 3 wins / 2 losses. **That is the fourth
+time in this project a promising signal evaporated under more seeds.** Treat any
+3-seed result here as provisional.
+
+### The only two ways past 0.34
+
+1. **Change the formulation** (Section 11's approach A, 0.558) — abandons the
+   fusion mechanism and the open-vocabulary property.
+2. **Change the backbone** (e.g. ViT-L/14). Section 11.1's noisy-oracle curve
+   shows attribute accuracy is the whole bottleneck and it is steep: 9% bit
+   error -> ~0.62, 5% -> ~0.90. Better embeddings lift both paths. But
+   ViT-B/32 is the mandated model to report, so this is an extra comparison,
+   not a better mandatory number.
+
+Neither is free. Note also that the assignment's bar is beating the L1 baseline
+(0.110); the deployed model is 3.1x that.
+
 ## Still to do
 
 1. **Colab verification — not done, and the main risk.** Everything ran on the
