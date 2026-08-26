@@ -91,7 +91,7 @@ Do not quietly replace L3 with A in the narrative.
 ## Honest caveats in the results
 
 - **Both L3 and A collapse**: ~26% distinct images in the top-10 vs ~75% for
-  L1/L2. §10.5 probes it with an identity anchor; §11.8 explains why it is the
+  L1/L2. §10.5 probes it with an identity anchor; §11.9 explains why it is the
   metric, not the model.
 - **Only 1 of 4 designed L3 mechanisms is justified** (the gate).
 - **`+Male, +Wearing_Lipstick`** is 0.000 for every composed-query method; A
@@ -122,14 +122,14 @@ ViT-B/32 all land in the same band:
 | learning-rate sweep | 10.4 | plateau ~0.32 - 0.34 |
 | identity anchor | 10.5 | 0.337 best under validation |
 | Level-3 repair (visual tokens + satisfaction) | 11.7 | 0.285 - 0.326 |
-| **auxiliary attribute loss** | **11.9** | **0.340 (vs 0.338 control)** |
+| **auxiliary attribute loss** | **11.8** | **0.340 (vs 0.338 control)** |
 
-Section 11.8 says the same thing from the other side: adding the whole trained
+Section 11.9 says the same thing from the other side: adding the whole trained
 fusion module on top of attribute scoring is worth +0.007. **~0.34 is a ceiling
 for this formulation and this backbone, not a tuning gap.** Do not spend more
 time tuning composed-query methods expecting a materially different number.
 
-### What 11.9 actually found
+### What 11.8 actually found
 
 Auxiliary attribute supervision (predict the target's 40-bit profile from the
 composed query, head discarded at inference) does NOT lift the benchmark:
