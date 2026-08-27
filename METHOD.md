@@ -1,4 +1,7 @@
-# Level 3 — Gated Cross-Attention Fusion
+# Level 3 — design history of the fusion module
+
+*(originally: "Gated Cross-Attention Fusion" — the deployed model has neither
+cross-attention nor learned sign embeddings; see the status box below.)*
 
 > **STATUS — superseded in part. Read `Project.ipynb` §8 and §10 first.**
 >

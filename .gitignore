@@ -65,3 +65,11 @@ _lrcheck.ipynb
 
 # nbconvert scratch (all scratch notebooks start with an underscore)
 _*.ipynb
+
+# Scaffolding and working notes that are not part of the deliverable
+pyproject.toml
+.python-version
+src/
+report_ref_prompt*.md
+refactoring_prompt.md
+*.lnk
