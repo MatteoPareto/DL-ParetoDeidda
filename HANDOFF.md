@@ -161,13 +161,43 @@ Neither is free. Note also that the assignment's bar is beating the L1 baseline
 
 ## Still to do
 
-1. **Colab verification — not done, and the main risk.** Everything ran on the
-   lab VM with `transformers 5.14.1` and warm caches. Put `celeba.zip` and
-   `celeba_evaluation.json` in `MyDrive/datasets/`, open the notebook, Run all,
-   confirm zero errors. Budget ~60 min cold (embeddings dominate).
-2. A **learned** conditional-similarity mask. §11.4 rules out the training-free
-   one; that is not evidence about a learned one, and it is the most literal
-   reading of the assignment's "dynamic similarity metric".
-3. Distil the probe's signal back into a composed query, so a single vector
-   inherits what A knows while staying open-vocabulary.
-4. `RUNNING.md` timings are approximate; re-check after a real Colab run.
+1. **Submit.** The deliverable is `Project.ipynb` on this branch: 77 cells, 47/47
+   executed, zero errors, outputs committed. Nothing else in the repository is part
+   of the submission.
+2. Optional, and deliberately not done: a learned conditional-similarity mask
+   (Section 11.4 rules out only the training-free one) and distilling the probe's
+   signal back into a composed query so a single vector inherits what A knows while
+   staying open-vocabulary. Both are weeks of work, not days.
+
+## Colab verification — DONE (2026-08-28)
+
+Run end to end on Colab with a T4. It works, and it found one bug that only
+appears there.
+
+**The bug.** The study caches hold pandas DataFrames pickled by pandas 3.0.5 on
+the lab VM. Colab ships pandas 2.x, and `StringDtype`'s constructor signature
+changed between them, so `torch.load` raised
+
+```
+TypeError: StringDtype.__init__() takes from 1 to 2 positional arguments but 3 were given
+```
+
+and stopped Run all at Section 10.2. Fixed in `a312d88`: all twelve cache reads go
+through `load_cache()`, which treats an unreadable file as a cache MISS and
+recomputes instead of aborting.
+
+**What this means for cache portability.** The claim that all `.pt` caches are
+portable between machines is wrong and has been corrected in `RUNNING.md`:
+
+- **Portable** (tensors and plain dicts): `celeba_clip_test_emb.pt`,
+  `celeba_clip_train_emb.pt`, `fusion_examples.pt`, `fusion_model.pt`. These were
+  copied VM -> Drive and loaded on Colab without complaint, saving the ~40 minute
+  extraction.
+- **Not portable** (contain DataFrames): the study caches — `ablations.pt`,
+  `robustness.pt`, `lr_sweep.pt`, `anchor_sweep.pt`, `joint_sweep.pt`,
+  `alt_study.pt`, `aux_confirm.pt`, `collapse_diag.pt`. They load only where the
+  pandas major version matches the one that wrote them. Since `a312d88` a mismatch
+  costs time, not a crash.
+
+**Note:** a fresh run with only the two course files on Drive never had the study
+caches and so never hit this. It is triggered by copying them across.

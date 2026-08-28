@@ -21,8 +21,15 @@ same code path.
 | Caches (`.pt`) | `MyDrive/datasets/` | `<repo>/database/` |
 | GPU | Runtime → T4 | NC-series VM (e.g. T4) |
 
-The `.pt` caches (embeddings, mined examples, model checkpoint) are **portable**: you can
-compute them in one environment and copy them to the other — the notebook validates them
+The large `.pt` caches (embeddings, mined examples, model checkpoint) are **portable**:
+they hold tensors and plain dicts, so you can compute them in one environment and copy
+them to the other. The small **study** caches (`ablations.pt`, `robustness.pt`,
+`lr_sweep.pt`, `anchor_sweep.pt`, `joint_sweep.pt`, `alt_study.pt`, `aux_confirm.pt`,
+`collapse_diag.pt`) are **not**: they contain pandas DataFrames, and pandas changed
+`StringDtype`'s signature between 2.x and 3.x, so a file written by one major version
+fails to unpickle under the other. Since `a312d88` that is not fatal — an unreadable
+cache is treated as a miss and the section recomputes — but do not expect copying them
+across machines to save time unless the pandas versions agree — the notebook validates them
 (model name, split, size) before using them.
 
 ---
@@ -193,6 +200,12 @@ VM → Colab: upload them to `MyDrive/datasets/`. Colab → VM: download from Dr
 `database/`. The notebook validates each cache on load (model, split, size, mining/training
 parameters) and regenerates it automatically if it does not match — so a wrong or stale
 file cannot silently corrupt results.
+
+The **study** caches are deliberately absent from that table. They hold pandas
+DataFrames and only load where the pandas major version matches the machine that wrote
+them, so copying them across gains nothing and, before `a312d88`, crashed the run. Leave
+them where they are and let the other environment recompute: that costs about 50 minutes
+on a cold Colab run and nothing at all on the VM, where the committed files are valid.
 
 ---
 
